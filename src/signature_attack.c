@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "signature.h"
 #include "signature_attack.h"
@@ -21,9 +22,6 @@ typedef struct ThreadData {
 void copy_signature(key* public, signatures *clues, key *false_key) {
 
   printf("Copying Signatures...\n");
-
-  memset(false_key->one, 0, BlockByteSize*256);
-  memset(false_key->zero, 0, BlockByteSize*256);
 
   int one, zero;
   for(int i = 0; i < 256; ++i) {
@@ -56,12 +54,10 @@ void *forge_signature(void *args) {
   char *message = thData->message;
   unsigned long long int count = thData->start;
 
-  char *new_message;
-  new_message = malloc(strlen(message) + 2*sizeof(unsigned long long int));
-  memset(new_message, 0, strlen(message) + 2*sizeof(unsigned long long int));
+  char new_message[100] = {0};
 
   unsigned char hash_message[SHA256_DIGEST_LENGTH];
-  uint16_t index, index_max;
+  uint16_t index, index_max = 0;
 
   SHA256_CTX ctx;
 
@@ -97,7 +93,6 @@ void *forge_signature(void *args) {
     }
     i++;
   }
-  free(new_message);
 
   nounce = count;
 
@@ -113,6 +108,8 @@ unsigned long long int attack_lamport(attackArgs *values) {
   }
 
   key false_key;
+  memset(false_key.one, 0, BlockByteSize*256);
+  memset(false_key.zero, 0, BlockByteSize*256);
 
   copy_signature(values->public, values->signs, &false_key);
 
@@ -134,6 +131,7 @@ unsigned long long int attack_lamport(attackArgs *values) {
     threads_args[i]->message = values->message;
     threads_args[i]->start = split*i;
 
+    threads[i] = malloc(sizeof(pthread_t *));
     pthread_create(threads[i], NULL, forge_signature, threads_args[i]);
   }
 
@@ -147,14 +145,15 @@ unsigned long long int attack_lamport(attackArgs *values) {
 
   forge_signature(threads_args[i]);
 
-  for(i = 0; i < (values->nThreads); ++i) {
+  for(i = 0; i < (values->nThreads - 1); ++i) {
+    free(threads[i]);
     free(threads_args[i]);
   }
-  free(threads_args);
+  free(threads_args[i]);
   free(threads);
+  free(threads_args);
 
-  char *message_forged = malloc(strlen(values->message) + 2*sizeof(unsigned long long int));
-  memset(message_forged, 0, strlen(values->message) + 2*sizeof(unsigned long long int));
+  char message_forged[100] = {0};
   sprintf(message_forged, "%s + %llu", values->message, nounce);
 
   Sign(&false_key, message_forged, values->forge);

@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -7,7 +8,7 @@
 #include "signature_attack.h"
 
 #define N_SIGNATURES 4
-#define N_THREADS 2
+#define N_THREADS 4
 
 int main(void) {
   key private, public;
@@ -23,8 +24,8 @@ int main(void) {
   signs.sign = malloc(N_SIGNATURES * sizeof(uint8_t *));
 
   for(int i = 0; i < N_SIGNATURES; ++i) {
-    message_i[i] = malloc(sizeof("Message[00]"));
-    sprintf(message_i[i], "Message[%d]", i);
+    message_i[i] = malloc(sizeof("Message[00]\n"));
+    sprintf(message_i[i], "Message[%d]\n", i);
     signs.sign[i] = malloc(256 * BlockByteSize * sizeof(uint8_t));
     Sign(&private, message_i[i], signs.sign[i]);
     if(!Verify(&public, message_i[i], signs.sign[i])) {
@@ -52,9 +53,13 @@ int main(void) {
   values.message = message_to_forge;
   values.forge = false_signature;
 
+  clock_t time = clock();
+
   unsigned long long int nounce = attack_lamport(&values);
-  char *message_forged = malloc(strlen(message_to_forge)*sizeof(char) + 2*sizeof(unsigned long long int));
-  memset(message_forged, 0, strlen(message_to_forge)*sizeof(char) + 2*sizeof(unsigned long long int));
+
+  time = clock() - time;
+  printf("It took %fs with %d threads to forge the signature\n", ((double)time)/CLOCKS_PER_SEC, N_THREADS);
+  char message_forged[100] = {0};
   sprintf(message_forged, "%s + %llu", message_to_forge, nounce);
   printf("%s\n", message_forged);
 
