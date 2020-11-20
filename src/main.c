@@ -57,7 +57,6 @@ int main(void) {
   memset(message_forged, 0, strlen(message_to_forge)*sizeof(char) + 2*sizeof(unsigned long long int));
   sprintf(message_forged, "%s + %llu", message_to_forge, nounce);
   printf("%s\n", message_forged);
-  printf("Done\n");
 
   for(int i = 0; i < N_SIGNATURES; ++i) {
     free(signs.sign[i]);

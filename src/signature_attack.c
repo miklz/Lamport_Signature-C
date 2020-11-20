@@ -68,7 +68,7 @@ void *forge_signature(void *args) {
   sprintf(new_message, "%s + %llu", message, count);
 
   int16_t i = 0;
-  while(i < 32) {
+  while(i < SHA256_DIGEST_LENGTH) {
     SHA256_Init(&ctx);
     SHA256_Update(&ctx, new_message, strlen(new_message));
     SHA256_Final(hash_message, &ctx);
@@ -97,7 +97,6 @@ void *forge_signature(void *args) {
     }
     i++;
   }
-  printf("%s\n", new_message);
   free(new_message);
 
   nounce = count;
