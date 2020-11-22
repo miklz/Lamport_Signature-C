@@ -8,7 +8,7 @@
 #include "signature_attack.h"
 
 #define N_SIGNATURES 4
-#define N_THREADS 4
+#define N_THREADS 2
 
 int main(void) {
   key private, public;

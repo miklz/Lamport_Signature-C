@@ -32,7 +32,7 @@ public key      : [ho0] ---------- [ho1] ---------- ... ---------- [ho255]
 ```
 
 It could be use any hash function to use this method, here I've chosen
-to use the same as in the ![assignments](https://ocw.mit.edu/courses/media-arts-and-sciences/mas-s62-cryptocurrency-engineering-and-design-spring-2018/assignments/pset1-hash-based-signature-schemes/) that's the SHA-256.
+to use the same as in the ![assignments](https://ocw.mit.edu/courses/media-arts-and-sciences/mas-s62-cryptocurrency-engineering-and-design-spring-2018/assignments/pset1-hash-based-signature-schemes/), that's, the SHA-256.
 
 To sign a message we first hash the message and for each bit of the hash
 we reveal the corresponding block.
@@ -56,13 +56,25 @@ for example, the public key would still have 256 bits per block, but it
 would be feasible in a modern computer to try out all the input
 possibilities hashing it and compare with the public key to find the private
 key in a modern computer. This is called a pre-image attack, so we need to
-make unrealistic to run out all the input values as the outputs of the hash
-function.
+make unrealistic to run out all the input values just as in the outputs of
+the hash function.
 
 ## Exploring the bad use of Lamport signature
 
-If the same private key is used to sign more than one message, than it is
+If the same private key is used to sign more than one message, than, it is
 possible for an attacker to sign its own message pretending to be the real
 owner of the key. If the messages signed were random messages than with
-4 messages is possible to forge a new message in a standard computer.
-Each signature reveals parts of the private key.
+4 messages is already possible to forge a new message in a standard computer.
+This is possible because each signature reveals parts of the private key,
+colecting the blocks revealed from the signatures gives a flexibility for
+an attacker to chose specific messages that use only those blocks.
+
+## Improvement using Merkle Tree
+
+Since is proven possible to hack a signature if the private key is used more
+than once we should never do that. Therefore, if we want to sign 4 messages
+we'll have to publish a 64 KB public key, and signing a message would have to
+say wich public key those blocks are refering to.
+But with merkle tree we only need to publish 32 B that is our public key, or root,
+and provide a validation methode so the verifyer can check that private key is
+indeed part of that tree.

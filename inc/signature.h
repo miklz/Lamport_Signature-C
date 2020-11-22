@@ -21,7 +21,7 @@ typedef struct Key {
  *
  * @Return: None.
  */
-void GenerateKeys(key* private, key* public);
+void GenerateKeys(key* prv, key* pub);
 
 /*
  * @Function:
@@ -37,7 +37,7 @@ void GenerateKeys(key* private, key* public);
  *
  * @Return: None.
  */
-void Sign(key* private, char* message, uint8_t *sign);
+void Sign(key* prv, char* message, uint8_t *sign);
 
 /*
  * @Function:
@@ -68,5 +68,5 @@ int check_hash(uint8_t *block, uint8_t *hash, int n);
  *
  * @Return: 1 if they match and 0 if they don't.
  */
-int Verify(key* public, char* message, uint8_t *sign);
+int Verify(key* pub, char* message, uint8_t *sign);
 

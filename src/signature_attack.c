@@ -19,7 +19,7 @@ typedef struct ThreadData {
   unsigned long long int start;
 } threadData;
 
-void copy_signature(key* public, signatures *clues, key *false_key) {
+void copy_signature(key* pub, signatures *clues, key *false_key) {
 
   printf("Copying Signatures...\n");
 
@@ -29,7 +29,7 @@ void copy_signature(key* public, signatures *clues, key *false_key) {
     zero = 0;
 
     for(int j = 0; j < clues->n; ++j){
-      if(check_hash(&clues->sign[j][i*BlockByteSize], &public->one[i*BlockByteSize], BlockByteSize)) {
+      if(check_hash(&clues->sign[j][i*BlockByteSize], &pub->one[i*BlockByteSize], BlockByteSize)) {
         memcpy(&false_key->one[i*BlockByteSize], &clues->sign[j][i*BlockByteSize], BlockByteSize);
         one = 1;
       } else {
@@ -111,7 +111,7 @@ unsigned long long int attack_lamport(attackArgs *values) {
   memset(false_key.one, 0, BlockByteSize*256);
   memset(false_key.zero, 0, BlockByteSize*256);
 
-  copy_signature(values->public, values->signs, &false_key);
+  copy_signature(values->pub, values->signs, &false_key);
 
   printf("Searching a Nounce...\n");
 
@@ -126,7 +126,7 @@ unsigned long long int attack_lamport(attackArgs *values) {
   for(i = 0; i < (values->nThreads - 1); ++i) {
     threads_args[i] = malloc(sizeof(threadData));
     threads_args[i]->threadID = i;
-    threads_args[i]->public = values->public;
+    threads_args[i]->public = values->pub;
     threads_args[i]->false_key = &false_key;
     threads_args[i]->message = values->message;
     threads_args[i]->start = split*i;
@@ -138,7 +138,7 @@ unsigned long long int attack_lamport(attackArgs *values) {
   // One thread will be the program itself
   threads_args[i] = malloc(sizeof(threadData));
   threads_args[i]->threadID = i;
-  threads_args[i]->public = values->public;
+  threads_args[i]->public = values->pub;
   threads_args[i]->false_key = &false_key;
   threads_args[i]->message = values->message;
   threads_args[i]->start = split*i;

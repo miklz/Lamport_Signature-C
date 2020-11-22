@@ -13,7 +13,7 @@ typedef struct Signatures {
 
 typedef struct Attack {
   int nThreads;
-  key *public;
+  key *pub;
   signatures *signs;
   char *message;
   uint8_t *forge;
@@ -34,7 +34,7 @@ typedef struct Attack {
  *
  * @Return: None
  */
-void copy_signature(key* public, signatures *clues, key *false_key);
+void copy_signature(key* pub, signatures *clues, key *false_key);
 
 /*
  * @Function:
