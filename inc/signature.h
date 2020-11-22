@@ -13,7 +13,7 @@ typedef struct Key {
  *  GenerateKeys
  *
  * @Description:
- *  It generetes a key pair, the private key is random. But the
+ *  It generates a key pair, the private key is random. But the
  *  public key is a sha256 hash of the private key.
  *
  * @Parameters:

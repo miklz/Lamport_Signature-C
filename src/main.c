@@ -48,7 +48,7 @@ int main(void) {
 
   attackArgs values;
   values.nThreads = N_THREADS;
-  values.public = &public;
+  values.pub = &public;
   values.signs = &signs;
   values.message = message_to_forge;
   values.forge = false_signature;

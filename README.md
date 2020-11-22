@@ -55,7 +55,7 @@ but for security reasons it shouldn't, if each block had a size of 32 bits,
 for example, the public key would still have 256 bits per block, but it
 would be feasible in a modern computer to try out all the input
 possibilities hashing it and compare with the public key to find the private
-key in a modern computer. This is called a pre-image attack, so we need to
+key. This is called a pre-image attack, so we need to
 make unrealistic to run out all the input values just as in the outputs of
 the hash function.
 
