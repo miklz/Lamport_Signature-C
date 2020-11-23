@@ -1,3 +1,6 @@
+#ifndef SIGNATURE_ATTACK_H
+#define SIGNATURE_ATTACK_H
+
 /*
  *  Author:
  *      Mikael F. Aldebrand.
@@ -65,3 +68,5 @@ void *forge_signature(void *args);
  * @Return: None.
  */
 unsigned long long int attack_lamport(attackArgs *values);
+
+#endif

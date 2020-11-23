@@ -1,3 +1,5 @@
+#ifndef SIGNATURE_H
+#define SIGNATURE_H
 
 #include <openssl/sha.h>
 
@@ -70,3 +72,4 @@ int check_hash(uint8_t *block, uint8_t *hash, int n);
  */
 int Verify(key* pub, char* message, uint8_t *sign);
 
+#endif

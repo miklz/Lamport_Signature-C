@@ -1,3 +1,6 @@
+#ifndef MERKLE_TREE_H
+#define MERKLE_TREE_H
+
 #include "stdint.h"
 
 #define NODE_ERROR 0
@@ -55,7 +58,6 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node);
  *  was successful or not.
  */
 void free_node(node_t *node);
-
 /*
  * @Function:
  *  free_tree;
@@ -71,3 +73,5 @@ void free_node(node_t *node);
  *  was successful or not.
  */
 void free_tree(node_t *node);
+
+#endif

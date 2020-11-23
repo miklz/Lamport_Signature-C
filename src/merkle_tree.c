@@ -5,29 +5,50 @@
 #include "merkle_tree.h"
 
 struct Leaf_t {
-    key *prv;
-    key *pub;
+  key *prv;
+  key *pub;
 };
 
 struct Node_t {
-    node_t *upper_node;
-    node_t *right_node;
-    node_t *left_node;
-    leaf_t *leaf;
-    uint8_t *data;
+  node_t *right_node;
+  node_t *left_node;
+  leaf_t *leaf;
+  uint8_t data[SHA256_DIGEST_LENGTH];
 };
 
 void build_tree(node_t *root, uint16_t n_messages) {
 
-  leaf_t *leaf = malloc(sizeof(leaf)*n_messages);
+  leaf_t *leaf = malloc(sizeof(leaf_t)*n_messages);
+  node_t *nodes = malloc(sizeof(node_t)*n_messages);
 
-  for(int i = 0; i < n_messages; ++i) {
+  for(int i = 0; i < n_messages; i += 2) {
     GenerateKeys(leaf[i].prv, leaf[i].pub);
+    node_set_leaf(&nodes[i], &leaf[i]);
   }
 
-  // Incomplete implementation
-  root->right_node = NULL;
-  root->left_node = NULL;
+  bootstrap_tree(root, nodes, n/2);
+}
+
+void node_set_leaf(node_t *node, leaf_t *leaf) {
+
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+  SHA256_Update(&ctx, leaf->public, ByteSizeArray*256);
+  SHA256_Final(node->data, &ctx);
+}
+
+void bootstrap_tree(node_t *root, node_t *nodes, int n) {
+
+  if(n == 1) {
+    add_node(root, &nodes[0], &nodes[1]);
+    return;
+  } else {
+    node_t *more_nodes = malloc(sizeof(node_t)*n);
+    for(int i = 0; i < n; i += 2) {
+      add_node(&more_nodes[i%2], &nodes[i], &nodes[i+1]);
+    }
+    bootstrap_tree(more_nodes, n/2);
+  }
 }
 
 int add_node(node_t *node, node_t *right_node, node_t *left_node) {
@@ -36,35 +57,19 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node) {
   node->right_node = right_node;
   node->left_node = left_node;
 
-  // Using the data of left and right node only if they exist
+  // Left and right nodes will always exist
   uint8_t *temp;
-  int array_size;
-  if((right_node->data != NULL) && (left_node->data != NULL)) {
-    array_size = 2*SHA256_DIGEST_LENGTH;
-    temp = malloc(array_size);
-    if(temp == NULL) {
-      return NODE_ERROR;
-    }
-    memcpy(temp, right_node->data, SHA256_DIGEST_LENGTH);
-    memcpy(temp + SHA256_DIGEST_LENGTH, left_node->data, SHA256_DIGEST_LENGTH);
-  } else if(right_node->data != NULL) {
-    array_size = SHA256_DIGEST_LENGTH;
-    temp = malloc(array_size);
-    memcpy(temp, right_node->data, array_size);
-  } else {
-    array_size = SHA256_DIGEST_LENGTH;
-    temp = malloc(array_size);
-    memcpy(temp, left_node->data, array_size);
+  temp = malloc(SHA256_DIGEST_LENGTH);
+  if(temp == NULL) {
+    return NODE_ERROR;
   }
+  memcpy(temp, right_node->data, SHA256_DIGEST_LENGTH);
+  memcpy(temp + SHA256_DIGEST_LENGTH, left_node->data, SHA256_DIGEST_LENGTH);
 
   // Performing hash of the hash of the nodes
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
-  SHA256_Update(&ctx, temp, array_size);
-  node->data = malloc(SHA256_DIGEST_LENGTH);
-  if(node->data == NULL) {
-    return NODE_ERROR;
-  }
+  SHA256_Update(&ctx, temp, 2*SHA256_DIGEST_LENGTH);
   SHA256_Final(node->data, &ctx);
 
   free(temp);
@@ -77,10 +82,10 @@ void free_node(node_t *node) {
   free(node->leaf);
   free(node->right_node);
   free(node->left_node);
-  free(node->data);
 }
 
 void free_tree(node_t *node) {
 
+  free_node(node);
   free(node);
 }
