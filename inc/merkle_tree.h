@@ -29,6 +29,37 @@ void build_tree(node_t *root, uint16_t n_messages);
 
 /*
  * @Function:
+ *  node_set_leaf
+ *
+ * @Description:
+ *  It sets a leaf to a node, performs a hash of the public key
+ *  and stores the hash result in the data field of the node.
+ *
+ * @Parameters:
+ *  The base node and the leaf that stores the public/private key.
+ *
+ * @Returns: None.
+ */
+void node_set_leaf(node_t *node, leaf_t *leaf);
+
+/*
+ * @Function:
+ *  bootstrapp_tree
+ *
+ * @Description:
+ *  Recursive function that constructs the tree from the base.
+ *
+ * @Parameters:
+ *  The root node and the base nodes are passed to the tree,
+ *  so the function constructs the tree and at the end it links to the
+ *  root node.
+ *
+ * @Returns: None.
+ */
+void bootstrap_tree(node_t *root, node_t *nodes, int n);
+
+/*
+ * @Function:
  *  add_node
  *
  * @Description:

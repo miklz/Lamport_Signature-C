@@ -26,14 +26,14 @@ void build_tree(node_t *root, uint16_t n_messages) {
     node_set_leaf(&nodes[i], &leaf[i]);
   }
 
-  bootstrap_tree(root, nodes, n/2);
+  bootstrap_tree(root, nodes, n_messages/2);
 }
 
 void node_set_leaf(node_t *node, leaf_t *leaf) {
 
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
-  SHA256_Update(&ctx, leaf->public, ByteSizeArray*256);
+  SHA256_Update(&ctx, leaf->pub, 256*BlockByteSize);
   SHA256_Final(node->data, &ctx);
 }
 
@@ -47,7 +47,7 @@ void bootstrap_tree(node_t *root, node_t *nodes, int n) {
     for(int i = 0; i < n; i += 2) {
       add_node(&more_nodes[i%2], &nodes[i], &nodes[i+1]);
     }
-    bootstrap_tree(more_nodes, n/2);
+    bootstrap_tree(root, more_nodes, n/2);
   }
 }
 
@@ -80,12 +80,21 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node) {
 void free_node(node_t *node) {
 
   free(node->leaf);
+  node->leaf = NULL;
   free(node->right_node);
+  node->right_node = NULL;
   free(node->left_node);
+  node->left_node = NULL;
 }
 
 void free_tree(node_t *node) {
 
+  if(node->left_node != NULL) {
+    free_tree(node->left_node);
+  }
+  if (node->right_node != NULL) {
+    free_tree(node->right_node);
+  }
   free_node(node);
   free(node);
 }
