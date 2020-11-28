@@ -5,12 +5,38 @@
 #include <string.h>
 
 #include "signature.h"
+#include "merkle_tree.h"
 #include "signature_attack.h"
 
 #define N_SIGNATURES 4
 #define N_THREADS 2
 
-int main(void) {
+void test_signature(void) {
+
+  printf("Testing the signature implementation\n");
+
+  key private, public;
+
+  GenerateKeys(&private, &public);
+
+  char message[] = "Validating signature";
+  uint8_t sign[256*BlockByteSize];
+
+  Sign(&private, message, sign);
+
+  int ret = Verify(&public, message, sign);
+
+  if(ret) {
+    printf("Signature successfully signed\n");
+  } else {
+    printf("Bad signature\n");
+  }
+}
+
+void test_forging_signature(void) {
+
+  printf("Exploring the bad use of Lamport signature\n");
+
   key private, public;
 
   GenerateKeys(&private, &public);
@@ -30,7 +56,7 @@ int main(void) {
     Sign(&private, message_i[i], signs.sign[i]);
     if(!Verify(&public, message_i[i], signs.sign[i])) {
       printf("Wrong sign\n");
-      return 1;
+      return;
     }
   }
 
@@ -75,6 +101,24 @@ int main(void) {
   }
 
   printf("Done\n");
+
+}
+
+void test_merkle_tree(void) {
+  node_t *root = build_tree(2);
+
+  print_tree(root);
+
+  free_tree(root);
+}
+
+int main(void) {
+
+  test_signature();
+
+  //test_forging_signature();
+
+  test_merkle_tree();
 
   return 0;
 }

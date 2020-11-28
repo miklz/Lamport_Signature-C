@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -5,50 +6,56 @@
 #include "merkle_tree.h"
 
 struct Leaf_t {
-  key *prv;
-  key *pub;
+  key prv;
+  key pub;
+  node_t *parent;
 };
 
 struct Node_t {
+  node_t *upper_node;
   node_t *right_node;
   node_t *left_node;
   leaf_t *leaf;
   uint8_t data[SHA256_DIGEST_LENGTH];
 };
 
-void build_tree(node_t *root, uint16_t n_messages) {
+node_t* build_tree(uint16_t n_messages) {
 
   leaf_t *leaf = malloc(sizeof(leaf_t)*n_messages);
   node_t *nodes = malloc(sizeof(node_t)*n_messages);
 
   for(int i = 0; i < n_messages; i += 2) {
-    GenerateKeys(leaf[i].prv, leaf[i].pub);
+    GenerateKeys(&leaf[i].prv, &leaf[i].pub);
     node_set_leaf(&nodes[i], &leaf[i]);
   }
 
-  bootstrap_tree(root, nodes, n_messages/2);
+  return bootstrap_tree(nodes, n_messages/2);
 }
 
 void node_set_leaf(node_t *node, leaf_t *leaf) {
 
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
-  SHA256_Update(&ctx, leaf->pub, 256*BlockByteSize);
+  SHA256_Update(&ctx, &leaf->pub, 256*BlockByteSize);
   SHA256_Final(node->data, &ctx);
+
+  //node->left_node = NULL;
+  //node->right_node = NULL;
+
+  leaf->parent = node;
 }
 
-void bootstrap_tree(node_t *root, node_t *nodes, int n) {
+node_t* bootstrap_tree(node_t *nodes, int n) {
 
-  if(n == 1) {
-    add_node(root, &nodes[0], &nodes[1]);
-    return;
-  } else {
-    node_t *more_nodes = malloc(sizeof(node_t)*n);
-    for(int i = 0; i < n; i += 2) {
-      add_node(&more_nodes[i%2], &nodes[i], &nodes[i+1]);
-    }
-    bootstrap_tree(root, more_nodes, n/2);
+  node_t *more_nodes = malloc(sizeof(node_t)*n);
+  for(int i = 0; i < n; i += 2) {
+    add_node(&more_nodes[i%2], &nodes[i], &nodes[i+1]);
   }
+  // If the last node was added return it!
+  if(n == 1)
+    return more_nodes;
+
+  return bootstrap_tree(more_nodes, n/2);
 }
 
 int add_node(node_t *node, node_t *right_node, node_t *left_node) {
@@ -57,9 +64,13 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node) {
   node->right_node = right_node;
   node->left_node = left_node;
 
+  // Setting the parent node
+  left_node->upper_node = node;
+  right_node->upper_node = node;
+
   // Left and right nodes will always exist
   uint8_t *temp;
-  temp = malloc(SHA256_DIGEST_LENGTH);
+  temp = malloc(2*SHA256_DIGEST_LENGTH);
   if(temp == NULL) {
     return NODE_ERROR;
   }
@@ -75,6 +86,63 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node) {
   free(temp);
 
   return NODE_SUCCESS;
+}
+
+void print_tree(node_t *node) {
+  /*
+  if(node->left_node != NULL) {
+    print_tree(node);
+  } else {
+    return;
+  }
+
+  if(node->right_node != NULL) {
+    print_tree(node);
+  } else {
+    return;
+  }
+  */
+
+  printf("Right node hash: ");
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    printf("%d", node->right_node->data[i]);
+  }
+  printf("\n");
+
+  printf("Left node hash: ");
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    printf("%d", node->left_node->data[i]);
+  }
+  printf("\n");
+
+  printf("Node hash: ");
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    printf("%d", node->data[i]);
+  }
+  printf("\n");
+
+  uint8_t hash_nodes[2*SHA256_DIGEST_LENGTH];
+  uint8_t hash_result[SHA256_DIGEST_LENGTH];
+
+  memcpy(hash_nodes, node->right_node->data, SHA256_DIGEST_LENGTH);
+  memcpy(hash_nodes + SHA256_DIGEST_LENGTH, node->left_node->data, SHA256_DIGEST_LENGTH);
+
+  SHA256_CTX ctx;
+  SHA256_Init(&ctx);
+  SHA256_Update(&ctx, hash_nodes, 2*SHA256_DIGEST_LENGTH);
+  SHA256_Final(hash_result, &ctx);
+
+  printf("Hash Result: ");
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    printf("%d", hash_result[i]);
+  }
+  printf("\n");
+
+  if(!memcmp(hash_result, node->data, SHA256_DIGEST_LENGTH)) {
+    printf("The node hash is correct\n");
+  } else {
+    printf("Problem with the node hash\n");
+  }
 }
 
 void free_node(node_t *node) {

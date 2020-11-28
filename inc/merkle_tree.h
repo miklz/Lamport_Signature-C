@@ -25,7 +25,7 @@ typedef struct Node_t node_t;
  *
  * @Returns: None.
  */
-void build_tree(node_t *root, uint16_t n_messages);
+node_t* build_tree(uint16_t n_messages);
 
 /*
  * @Function:
@@ -56,7 +56,7 @@ void node_set_leaf(node_t *node, leaf_t *leaf);
  *
  * @Returns: None.
  */
-void bootstrap_tree(node_t *root, node_t *nodes, int n);
+node_t* bootstrap_tree(node_t *nodes, int n);
 
 /*
  * @Function:
@@ -73,6 +73,22 @@ void bootstrap_tree(node_t *root, node_t *nodes, int n);
  *  was successful or not.
  */
 int add_node(node_t *node, node_t *right_node, node_t *left_node);
+
+/*
+ * @Function:
+ *  print_tree
+ *
+ * @Description:
+ *  It'll print the child nodes hashes and the parent hash exacly how its on
+ *  the tree and computing the hashes of the childs to see if they match with
+ *  the parent node hash
+ *
+ * @Parameters:
+ *  The root node
+ *
+ * @Returns: None
+ */
+void print_tree(node_t *node);
 
 /*
  * @Function:
