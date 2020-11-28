@@ -6,14 +6,14 @@
 
 #include "signature.h"
 
-
 void GenerateKeys(key* prv, key* pub) {
 
-  uint8_t k = 0;
-  srand(k);
-  for(int i = 0; i < BlockByteSize*256; ++i) {
-    prv->zero[i] = rand();
-    prv->one[i] = rand();
+  int tmp;
+  for(int i = 0; i < BlockByteSize*256; i += 4) {
+    tmp = rand();
+    memcpy(&prv->zero[i], &tmp, sizeof(int));
+    tmp = rand();
+    memcpy(&prv->one[i], &tmp, sizeof(int));
   }
 
   SHA256_CTX ctx;
@@ -98,4 +98,3 @@ int Verify(key* pub, char* message, uint8_t *sign) {
 
   return 1;
 }
-

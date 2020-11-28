@@ -105,7 +105,7 @@ void test_forging_signature(void) {
 }
 
 void test_merkle_tree(void) {
-  node_t *root = build_tree(2);
+  node_t *root = build_tree(4);
 
   print_tree(root);
 
@@ -113,6 +113,9 @@ void test_merkle_tree(void) {
 }
 
 int main(void) {
+
+  uint8_t k = 0;
+  srand(k);
 
   test_signature();
 

@@ -21,12 +21,22 @@ struct Node_t {
 
 node_t* build_tree(uint16_t n_messages) {
 
-  leaf_t *leaf = malloc(sizeof(leaf_t)*n_messages);
   node_t *nodes = malloc(sizeof(node_t)*n_messages);
+  if(nodes == NULL) {
+    printf("Can't allocate memory for the nodes\n");
+    exit(EXIT_FAILURE);
+  }
 
-  for(int i = 0; i < n_messages; i += 2) {
-    GenerateKeys(&leaf[i].prv, &leaf[i].pub);
-    node_set_leaf(&nodes[i], &leaf[i]);
+  for(int i = 0; i < n_messages; ++i) {
+    nodes[i].leaf = malloc(sizeof(leaf_t));
+
+    if(nodes[i].leaf == NULL) {
+      printf("Can't allocate memory for the leaves\n");
+      exit(EXIT_FAILURE);
+    }
+
+    GenerateKeys(&nodes[i].leaf->prv, &nodes[i].leaf->pub);
+    node_set_leaf(&nodes[i], nodes[i].leaf);
   }
 
   return bootstrap_tree(nodes, n_messages/2);
@@ -39,17 +49,14 @@ void node_set_leaf(node_t *node, leaf_t *leaf) {
   SHA256_Update(&ctx, &leaf->pub, 256*BlockByteSize);
   SHA256_Final(node->data, &ctx);
 
-  //node->left_node = NULL;
-  //node->right_node = NULL;
-
   leaf->parent = node;
 }
 
 node_t* bootstrap_tree(node_t *nodes, int n) {
 
   node_t *more_nodes = malloc(sizeof(node_t)*n);
-  for(int i = 0; i < n; i += 2) {
-    add_node(&more_nodes[i%2], &nodes[i], &nodes[i+1]);
+  for(int i = 0; i <= n; i += 2) {
+    add_node(&more_nodes[i/2], &nodes[i], &nodes[i+1]);
   }
   // If the last node was added return it!
   if(n == 1)
@@ -58,7 +65,7 @@ node_t* bootstrap_tree(node_t *nodes, int n) {
   return bootstrap_tree(more_nodes, n/2);
 }
 
-int add_node(node_t *node, node_t *right_node, node_t *left_node) {
+int add_node(node_t *node, node_t *left_node, node_t *right_node) {
 
   // Connecting right and left node
   node->right_node = right_node;
@@ -69,8 +76,7 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node) {
   right_node->upper_node = node;
 
   // Left and right nodes will always exist
-  uint8_t *temp;
-  temp = malloc(2*SHA256_DIGEST_LENGTH);
+  uint8_t *temp = malloc(2*SHA256_DIGEST_LENGTH);
   if(temp == NULL) {
     return NODE_ERROR;
   }
@@ -147,12 +153,10 @@ void print_tree(node_t *node) {
 
 void free_node(node_t *node) {
 
-  free(node->leaf);
-  node->leaf = NULL;
-  free(node->right_node);
-  node->right_node = NULL;
-  free(node->left_node);
-  node->left_node = NULL;
+  if(node->leaf != NULL) {
+    free(node->leaf);
+    node->leaf = NULL;
+  }
 }
 
 void free_tree(node_t *node) {
@@ -160,9 +164,12 @@ void free_tree(node_t *node) {
   if(node->left_node != NULL) {
     free_tree(node->left_node);
   }
+  node->left_node = NULL;
   if (node->right_node != NULL) {
     free_tree(node->right_node);
   }
+  node->right_node = NULL;
   free_node(node);
   free(node);
+  node = NULL;
 }
