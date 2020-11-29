@@ -3,6 +3,9 @@
 
 #include "stdint.h"
 
+#define KEY_AVAILABLE 1
+#define KEY_NOT_AVAILABLE 0
+
 #define NODE_ERROR 0
 #define NODE_SUCCESS 1
 
@@ -50,13 +53,12 @@ void node_set_leaf(node_t *node, leaf_t *leaf);
  *  Recursive function that constructs the tree from the base.
  *
  * @Parameters:
- *  The root node and the base nodes are passed to the tree,
- *  so the function constructs the tree and at the end it links to the
- *  root node.
+ *  The number of nodes to make are passed to the function, and the node made
+ * is returned
  *
  * @Returns: None.
  */
-node_t* bootstrap_tree(node_t *nodes, int n);
+node_t* bootstrap_tree(int n);
 
 /*
  * @Function:
@@ -90,21 +92,6 @@ int add_node(node_t *node, node_t *right_node, node_t *left_node);
  */
 void print_tree(node_t *node);
 
-/*
- * @Function:
- *  free_node
- *
- * @Description:
- *  Delete a specific node, releasing the memory used.
- *
- * @Parameters:
- *  Node to be deleted.
- *
- * @Returns:
- *  NODE_ERROR or NODE_SUCCESS depending if the operation
- *  was successful or not.
- */
-void free_node(node_t *node);
 /*
  * @Function:
  *  free_tree;
