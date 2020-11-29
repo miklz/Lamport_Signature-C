@@ -95,29 +95,28 @@ int add_node(node_t *node, node_t *left_node, node_t *right_node) {
 }
 
 void print_tree(node_t *node) {
-  /*
+
   if(node->left_node != NULL) {
-    print_tree(node);
+    print_tree(node->left_node);
   } else {
     return;
   }
 
   if(node->right_node != NULL) {
-    print_tree(node);
+    print_tree(node->right_node);
   } else {
     return;
   }
-  */
-
-  printf("Right node hash: ");
-  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-    printf("%d", node->right_node->data[i]);
-  }
-  printf("\n");
 
   printf("Left node hash: ");
   for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
     printf("%d", node->left_node->data[i]);
+  }
+  printf("\n");
+
+  printf("Right node hash: ");
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+    printf("%d", node->right_node->data[i]);
   }
   printf("\n");
 
