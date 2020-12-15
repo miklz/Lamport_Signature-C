@@ -91,6 +91,18 @@ int add_node(node_t *node, node_t *left_node, node_t *right_node) {
   return NODE_SUCCESS;
 }
 
+uint8_t* merkle_sign(node_t *node, char *message) {
+  if(node->node_left != NULL) {
+    return merkle_sign(node->left_node, message);
+  }
+  if(node->node_right != NULL) {
+    return merkle_sign(node->right_node, message);
+  }
+  if(node->leaf->available) {
+
+  }
+}
+
 void print_tree(node_t *node) {
 
   if(node->left_node != NULL) {

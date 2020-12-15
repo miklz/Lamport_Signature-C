@@ -94,6 +94,35 @@ void print_tree(node_t *node);
 
 /*
  * @Function:
+ *  merkle_sign
+ *
+ * @Description:
+ *  returns the parts of the private key just as the public key and the verifying
+ *  nodes hashes
+ *
+ * @Parameters:
+ *  Root node and the message to sign
+ *
+ * @Returns: pointer of int : Signature, public key, authentication nodes.
+ */
+uint8_t* merkle_sign(node_t *node, char *message);
+
+/*
+ * @Function:
+ *  verify_prove.
+ *
+ * @Description:
+ *  Check if the signature provide hashes to the public key.
+ *
+ * @Parameters:
+ *  Merkle signature.
+ *
+ * @Returns: true or false if the signature matchs or not.
+ */
+uint8_t verify_prove(uint8_t* signature);
+
+/*
+ * @Function:
  *  free_tree;
  *
  * @Description:
