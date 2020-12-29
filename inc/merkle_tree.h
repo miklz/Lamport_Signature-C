@@ -166,6 +166,20 @@ uint8_t verify_prove(uint8_t *pub, char* message, merkle_sign* signature);
 
 /*
  * @Function:
+ *  free_merkle_signature;
+ *
+ * @Description:
+ *  Free the signature within the structure and the structure pointer
+ *
+ * @Parameters:
+ *  Merkle signature.
+ *
+ * @Returns: None
+ */
+void free_merkle_signature(merkle_sign* signature);
+
+/*
+ * @Function:
  *  free_tree;
  *
  * @Description:

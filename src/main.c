@@ -110,15 +110,24 @@ void test_merkle_tree(void) {
   print_tree(get_root(merkle_tree));
 
   char message[] = "Testing Merkle signature scheme";
-  merkle_sign *merkle_test = merkle_signature(merkle_tree, message);
+  merkle_sign *merkle_test;
+  for(int i = 0; i < 9; ++i) {
+    merkle_test = merkle_signature(merkle_tree, message);
 
-  if(verify_prove(get_public_hash(merkle_tree), message, merkle_test)) {
-    printf("The signature is within the tree\n");
-  } else {
-    printf("The prove doesn't match with the public hash\n");
+    if(merkle_test == NULL) {
+      printf("No more keys available\n");
+      free_tree(merkle_tree);
+      return;
+    }
+
+    if(verify_prove(get_public_hash(merkle_tree), message, merkle_test)) {
+      printf("The signature is within the tree\n");
+    } else {
+      printf("The prove doesn't match with the public hash\n");
+    }
+    free_merkle_signature(merkle_test);
   }
 
-  free(merkle_test);
   free_tree(merkle_tree);
 }
 

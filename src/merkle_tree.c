@@ -50,7 +50,7 @@ void node_set_leaf(node_t *node, leaf_t *leaf) {
 
   SHA256_CTX ctx;
   SHA256_Init(&ctx);
-  SHA256_Update(&ctx, &leaf->pub, 256*BlockByteSize);
+  SHA256_Update(&ctx, &leaf->pub, sizeof(key));
   SHA256_Final(node->data, &ctx);
 
   leaf->parent = node;
@@ -149,19 +149,23 @@ merkle_sign* merkle_signature(tree_t *tree, char *message) {
 
   construct_signature(tree->root->data, tree->keys[i]->parent, signature);
 
+  tree->keys[i]->available = KEY_NOT_AVAILABLE;
+
   return signature;
 }
 
 void construct_signature(uint8_t *pub_hash, node_t *node, merkle_sign *sign) {
 
   if(memcmp(node->data, pub_hash, SHA256_DIGEST_LENGTH)) {
-    sign->sign = realloc(sign->sign, sign->size + SHA256_DIGEST_LENGTH);
+    sign->sign = realloc(sign->sign, sign->size + SHA256_DIGEST_LENGTH + 1);
     if(node->upper_node->right_node != node) {
-      memcpy(sign->sign + sign->size, node->upper_node->right_node->data, SHA256_DIGEST_LENGTH);
+      sign->sign[sign->size] = 1;
+      memcpy(sign->sign + sign->size + 1, node->upper_node->right_node->data, SHA256_DIGEST_LENGTH);
     } else {
-      memcpy(sign->sign + sign->size, node->upper_node->left_node->data, SHA256_DIGEST_LENGTH);
+      sign->sign[sign->size] = 0;
+      memcpy(sign->sign + sign->size + 1, node->upper_node->left_node->data, SHA256_DIGEST_LENGTH);
     }
-    sign->size = sign->size + SHA256_DIGEST_LENGTH;
+    sign->size = sign->size + SHA256_DIGEST_LENGTH + 1;
     construct_signature(pub_hash, node->upper_node, sign);
   }
 }
@@ -171,21 +175,27 @@ uint8_t verify_prove(uint8_t *pub, char* message, merkle_sign* signature) {
   key leaf_key;
   memcpy(&leaf_key, signature->sign + BlockByteSize*256, sizeof(key));
   if(Verify(&leaf_key, message, signature->sign)) {
-    uint8_t temp[2*SHA256_DIGEST_LENGTH];
+    uint8_t result[SHA256_DIGEST_LENGTH], temp[2*SHA256_DIGEST_LENGTH];
     SHA256_CTX ctx;
 
     SHA256_Init(&ctx);
     SHA256_Update(&ctx, &leaf_key, sizeof(key));
-    SHA256_Final(temp, &ctx);
+    SHA256_Final(result, &ctx);
 
-    for(int i = BlockByteSize*256 + sizeof(key); i < signature->size; i += SHA256_DIGEST_LENGTH) {
-      memcpy(temp+SHA256_DIGEST_LENGTH, &signature->sign[i], SHA256_DIGEST_LENGTH);
+    for(int i = BlockByteSize*256 + sizeof(key); i < signature->size; i += SHA256_DIGEST_LENGTH + 1) {
+      if(signature->sign[i]) {
+        memcpy(temp, &signature->sign[i+1], SHA256_DIGEST_LENGTH);
+        memcpy(temp + SHA256_DIGEST_LENGTH, result, SHA256_DIGEST_LENGTH);
+      } else {
+        memcpy(temp, result, SHA256_DIGEST_LENGTH);
+        memcpy(temp + SHA256_DIGEST_LENGTH, &signature->sign[i+1], SHA256_DIGEST_LENGTH);
+      }
       SHA256_Init(&ctx);
-      SHA256_Update(&ctx, temp, SHA256_DIGEST_LENGTH);
-      SHA256_Final(temp, &ctx);
+      SHA256_Update(&ctx, temp, 2*SHA256_DIGEST_LENGTH);
+      SHA256_Final(result, &ctx);
     }
 
-    if(!memcmp(temp, pub, SHA256_DIGEST_LENGTH)) {
+    if(!memcmp(result, pub, SHA256_DIGEST_LENGTH)) {
       return 1;
     }
   }
@@ -224,35 +234,22 @@ void print_tree(node_t *node) {
     printf("%d", node->data[i]);
   }
   printf("\n");
+}
 
-  uint8_t hash_nodes[2*SHA256_DIGEST_LENGTH];
-  uint8_t hash_result[SHA256_DIGEST_LENGTH];
+void free_merkle_signature(merkle_sign* signature) {
 
-  memcpy(hash_nodes, node->right_node->data, SHA256_DIGEST_LENGTH);
-  memcpy(hash_nodes + SHA256_DIGEST_LENGTH, node->left_node->data, SHA256_DIGEST_LENGTH);
-
-  SHA256_CTX ctx;
-  SHA256_Init(&ctx);
-  SHA256_Update(&ctx, hash_nodes, 2*SHA256_DIGEST_LENGTH);
-  SHA256_Final(hash_result, &ctx);
-
-  printf("Hash Result: ");
-  for(int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
-    printf("%d", hash_result[i]);
-  }
-  printf("\n");
-
-  if(!memcmp(hash_result, node->data, SHA256_DIGEST_LENGTH)) {
-    printf("The node hash is correct\n");
-  } else {
-    printf("Problem with the node hash\n");
-  }
+  free(signature->sign);
+  free(signature);
+  signature = NULL;
 }
 
 void free_tree(tree_t *tree) {
 
   free_node(tree->root);
+  tree->root = NULL;
   free(tree->keys);
+  tree->keys = NULL;
+  free(tree);
   tree = NULL;
 }
 
