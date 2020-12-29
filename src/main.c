@@ -105,11 +105,21 @@ void test_forging_signature(void) {
 }
 
 void test_merkle_tree(void) {
-  node_t *root = build_tree(8);
+  tree_t *merkle_tree = build_tree(8);
 
-  print_tree(root);
+  print_tree(get_root(merkle_tree));
 
-  free_tree(root);
+  char message[] = "Testing Merkle signature scheme";
+  merkle_sign *merkle_test = merkle_signature(merkle_tree, message);
+
+  if(verify_prove(get_public_hash(merkle_tree), message, merkle_test)) {
+    printf("The signature is within the tree\n");
+  } else {
+    printf("The prove doesn't match with the public hash\n");
+  }
+
+  free(merkle_test);
+  free_tree(merkle_tree);
 }
 
 int main(void) {

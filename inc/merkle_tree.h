@@ -11,6 +11,8 @@
 
 typedef struct Leaf_t leaf_t;
 typedef struct Node_t node_t;
+typedef struct Tree_t tree_t;
+typedef struct Merkle_sign merkle_sign;
 
 /*
  * @Function:
@@ -26,9 +28,9 @@ typedef struct Node_t node_t;
  *  The node that will be the root of the tree.
  *  The number of messages that we want to sign (must be a power of two).
  *
- * @Returns: None.
+ * @Returns: The merkle tree.
  */
-node_t* build_tree(uint16_t n_messages);
+tree_t* build_tree(uint16_t n_messages);
 
 /*
  * @Function:
@@ -53,12 +55,39 @@ void node_set_leaf(node_t *node, leaf_t *leaf);
  *  Recursive function that constructs the tree from the base.
  *
  * @Parameters:
- *  The number of nodes to make are passed to the function, and the node made
- * is returned
+ *  The tree, and the number of nodes to be made are passed to the function
  *
- * @Returns: None.
+ * @Returns: The node created is return.
  */
-node_t* bootstrap_tree(int n);
+node_t* bootstrap_tree(tree_t *tree, int n);
+
+/*
+ * @Function:
+ *  get_root
+ *
+ * @Description:
+ *  Returns the root of the tree, the first node
+ *
+ * @Parameters:
+ *  The tree
+ *
+ * @Returns: The root node.
+ */
+node_t* get_root(tree_t *tree);
+
+/*
+ * @Function:
+ *  get_public_hash
+ *
+ * @Description:
+ *  Returns the public hash
+ *
+ * @Parameters:
+ *  The tree
+ *
+ * @Returns: The hash.
+ */
+uint8_t* get_public_hash(tree_t *tree);
 
 /*
  * @Function:
@@ -103,9 +132,23 @@ void print_tree(node_t *node);
  * @Parameters:
  *  Root node and the message to sign
  *
- * @Returns: pointer of int : Signature, public key, authentication nodes.
+ * @Returns: The merkle signature, with the signature and size of the signature.
  */
-uint8_t* merkle_sign(node_t *node, char *message);
+merkle_sign* merkle_signature(tree_t *tree, char *message);
+
+/*
+ * @Function:
+ *  construct_signature
+ *
+ * @Description:
+ *  Recursive function that copys the hashes of the adjacents nodes
+ *
+ * @Parameters:
+ *  Public hash (goal), the node to start and a merkle struct (array with size)
+ *
+ * @Returns: None
+ */
+void construct_signature(uint8_t *pub_hash, node_t *node, merkle_sign *sign);
 
 /*
  * @Function:
@@ -115,15 +158,29 @@ uint8_t* merkle_sign(node_t *node, char *message);
  *  Check if the signature provide hashes to the public key.
  *
  * @Parameters:
- *  Merkle signature.
+ *  Public key, the message and the merkle signature.
  *
  * @Returns: true or false if the signature matchs or not.
  */
-uint8_t verify_prove(uint8_t* signature);
+uint8_t verify_prove(uint8_t *pub, char* message, merkle_sign* signature);
 
 /*
  * @Function:
  *  free_tree;
+ *
+ * @Description:
+ *  Chop the tree
+ *
+ * @Parameters:
+ *  Tree.
+ *
+ * @Returns: None
+ */
+void free_tree(tree_t *tree);
+
+/*
+ * @Function:
+ *  free_node;
  *
  * @Description:
  *  Delete the whole tree.
@@ -131,10 +188,8 @@ uint8_t verify_prove(uint8_t* signature);
  * @Parameters:
  *  Root node.
  *
- * @Returns:
- *  NODE_ERROR or NODE_SUCCESS depending if the operation
- *  was successful or not.
+ * @Returns: None
  */
-void free_tree(node_t *node);
+void free_node(node_t *node);
 
 #endif
