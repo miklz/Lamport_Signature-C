@@ -111,8 +111,8 @@ int add_node(node_t *node, node_t *left_node, node_t *right_node) {
   if(temp == NULL) {
     return NODE_ERROR;
   }
-  memcpy(temp, right_node->data, SHA256_DIGEST_LENGTH);
-  memcpy(temp + SHA256_DIGEST_LENGTH, left_node->data, SHA256_DIGEST_LENGTH);
+  memcpy(temp, left_node->data, SHA256_DIGEST_LENGTH);
+  memcpy(temp + SHA256_DIGEST_LENGTH, right_node->data, SHA256_DIGEST_LENGTH);
 
   // Performing hash of the hash of the nodes
   SHA256_CTX ctx;
@@ -159,10 +159,10 @@ void construct_signature(uint8_t *pub_hash, node_t *node, merkle_sign *sign) {
   if(memcmp(node->data, pub_hash, SHA256_DIGEST_LENGTH)) {
     sign->sign = realloc(sign->sign, sign->size + SHA256_DIGEST_LENGTH + 1);
     if(node->upper_node->right_node != node) {
-      sign->sign[sign->size] = 1;
+      sign->sign[sign->size] = 0;
       memcpy(sign->sign + sign->size + 1, node->upper_node->right_node->data, SHA256_DIGEST_LENGTH);
     } else {
-      sign->sign[sign->size] = 0;
+      sign->sign[sign->size] = 1;
       memcpy(sign->sign + sign->size + 1, node->upper_node->left_node->data, SHA256_DIGEST_LENGTH);
     }
     sign->size = sign->size + SHA256_DIGEST_LENGTH + 1;
@@ -246,7 +246,6 @@ void free_merkle_signature(merkle_sign* signature) {
 void free_tree(tree_t *tree) {
 
   free_node(tree->root);
-  tree->root = NULL;
   free(tree->keys);
   tree->keys = NULL;
   free(tree);

@@ -8,7 +8,7 @@
 #include "merkle_tree.h"
 #include "signature_attack.h"
 
-#define N_SIGNATURES 4
+#define N_SIGNATURES 5
 #define N_THREADS 2
 
 void test_signature(void) {
@@ -138,7 +138,7 @@ int main(void) {
 
   test_signature();
 
-  //test_forging_signature();
+  test_forging_signature();
 
   test_merkle_tree();
 
